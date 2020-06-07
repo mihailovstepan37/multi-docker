@@ -1,0 +1,23 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t diesel457/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run diesel457/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t diesel457/multi-client ./client
+  - docker build -t diesel457/multi-nginx ./nginx
+  - docker build -t diesel457/multi-server ./server
+  - docker build -t diesel457/multi-worker ./worker
+
+  # Log in to the docker CLI
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take those images and push them to docker hub
+  - docker push diesel457/multi-client
+  - docker push diesel457/multi-nginx
+  - docker push diesel457/multi-server
+  - docker push diesel457/multi-worker
